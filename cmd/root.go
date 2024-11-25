@@ -7,6 +7,11 @@ import (
 	"github.com/spf13/cobra"
 )
 
+var (
+	Port    uint
+	Message string
+)
+
 var rootCmd = &cobra.Command{
 	Use:   "tcpip",
 	Short: "tcpip",
