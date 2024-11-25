@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"io"
 	"net"
 
 	"github.com/spf13/cobra"
@@ -25,22 +26,31 @@ var tcpserverCmd = &cobra.Command{
 			panic(err)
 		}
 		fmt.Println("started TCP server on port", Port)
+		// accept loop
 		for {
 			conn, err := l.Accept()
 			if err != nil {
 				fmt.Errorf("accept error: %v", err)
+				continue
 			}
 			go func() {
 				defer conn.Close()
+				// read loop
 				for {
 					buf := make([]byte, 1024)
 					n, err := conn.Read(buf)
 					if err != nil {
+						if err == io.EOF {
+							fmt.Println("client", conn.RemoteAddr().String(), "disconnected")
+							break
+						}
 						fmt.Printf("read error: %v\n", err)
 						break
 					}
-					// conn.Write(buf[:n])
-					fmt.Println("message received:", string(buf[:n]))
+
+					message := string(buf[:n])
+					fmt.Printf("Received message from (%s): %s\n", conn.RemoteAddr().String(), message)
+					conn.Write([]byte(fmt.Sprintf("We have received your message: %s", message)))
 				}
 			}()
 		}
